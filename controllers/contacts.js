@@ -10,7 +10,7 @@ const PostSchema = Joi.object({
   phone: Joi.string()
     .pattern(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/)
     .required(),
-  favorite: Joi.boolean()
+  favorite: Joi.boolean(),
 });
 
 const PutSchema = Joi.object({
@@ -19,7 +19,7 @@ const PutSchema = Joi.object({
   phone: Joi.string().pattern(
     /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/
   ),
-  favorite: Joi.boolean()
+  favorite: Joi.boolean(),
 });
 
 const getAll = async (req, res, next) => {
@@ -96,8 +96,8 @@ const remove = async (req, res, next) => {
   try {
     const id = req.params.contactId;
     const remove = await contactsActions.removeContact(id);
-      if (remove === null) {
-        throw HttpError(404, "Not found");
+    if (remove === null) {
+      throw HttpError(404, "Not found");
     } else {
       res.json({
         status: "contact deleted",
@@ -148,7 +148,10 @@ const updateStatus = async (req, res, next) => {
 
     if (Object.keys(req.body).length === 0) {
       throw HttpError(400, "missing required fields");
-    } else if (Object.keys(req.body).length > 1 && Object.keys(req.body).filter(elem => elem !== "favorite")) {
+    } else if (
+      Object.keys(req.body).length > 1 &&
+      Object.keys(req.body).filter((elem) => elem !== "favorite")
+    ) {
       throw HttpError(400, "missing field favorite");
     } else {
       const update = await contactsActions.updateContact(id, req.body);
@@ -175,5 +178,5 @@ module.exports = {
   add,
   remove,
   update,
-  updateStatus
+  updateStatus,
 };

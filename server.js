@@ -1,10 +1,10 @@
-const app = require('./app')
+const app = require("./app");
 
 const mongoose = require("mongoose");
 
 mongoose.Promise = global.Promise;
 
-require('dotenv').config();
+require("dotenv").config();
 
 const PORT = process.env.PORT || 3000;
 const uriDb = process.env.DB_HOST;
@@ -17,8 +17,7 @@ connection
       console.log(`Database connection successful`);
     });
   })
-  .catch(err => {
+  .catch((err) => {
     console.log(`Server not running. Error message: ${err.message}`);
-    process.exit(1)
-  }
-  );
+    process.exit(1);
+  });

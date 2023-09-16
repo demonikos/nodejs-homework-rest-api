@@ -1,4 +1,4 @@
-const Contact = require("../models/contact")
+const Contact = require("../models/contact");
 
 const listContacts = async () => {
   const data = await Contact.find();
@@ -6,28 +6,28 @@ const listContacts = async () => {
 };
 
 const getContactById = async (contactId) => {
-  const data = await Contact.findOne({_id: contactId});
+  const data = await Contact.findOne({ _id: contactId });
   return data;
 };
 
 const removeContact = async (contactId) => {
-const data = await Contact.findByIdAndDelete(contactId);
-    return data;
+  const data = await Contact.findByIdAndDelete(contactId);
+  return data;
 };
 
 const addContact = async (body) => {
-const data = await Contact.create({
-  name: body.name,
-  email: body.email,
-  phone: body.phone,
-  favorite: body.favorite,
-})
-return data
+  const data = await Contact.create({
+    name: body.name,
+    email: body.email,
+    phone: body.phone,
+    favorite: body.favorite,
+  });
+  return data;
 };
 
 const updateContact = async (contactId, body) => {
   const data = await Contact.findByIdAndUpdate(contactId, body, { new: true });
-    return data;
+  return data;
 };
 
 module.exports = {
@@ -35,5 +35,5 @@ module.exports = {
   getContactById,
   removeContact,
   addContact,
-  updateContact
+  updateContact,
 };
