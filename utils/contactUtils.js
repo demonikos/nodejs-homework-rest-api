@@ -1,7 +1,12 @@
 const Contact = require("../models/contact");
 
-const listContacts = async () => {
-  const data = await Contact.find();
+const findContact = async (body) => {
+  const data = await Contact.findOne(body);
+  return data;
+};
+
+const listContacts = async (owner, params, skip, limit) => {
+  const data = await Contact.find({ owner, ...params }, {}, { skip, limit });
   return data;
 };
 
@@ -21,6 +26,7 @@ const addContact = async (body) => {
     email: body.email,
     phone: body.phone,
     favorite: body.favorite,
+    owner: body.owner,
   });
   return data;
 };
@@ -36,4 +42,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
+  findContact,
 };

@@ -1,7 +1,7 @@
 const { nanoid } = require("nanoid");
 const Joi = require("joi");
 
-const contactsActions = require("../utils/utils");
+const contactsActions = require("../utils/contactUtils");
 const HttpError = require("../helpers/HttpError");
 
 const PostSchema = Joi.object({
@@ -24,7 +24,27 @@ const PutSchema = Joi.object({
 
 const getAll = async (req, res, next) => {
   try {
-    const getAll = await contactsActions.listContacts();
+    const list = ["page", "limit", "name", "email", "phone", "favorite"];
+    const { _id: owner } = req.user;
+    const query = req.query;
+
+    const check = Object.keys(query).every((value) => list.includes(value));
+
+    if (check === false) {
+      throw HttpError(400, "bad request");
+    }
+
+    const { page = 1, limit = 10, ...other } = query;
+    const params = { ...other };
+
+    const skip = (page - 1) * limit;
+    const getAll = await contactsActions.listContacts(
+      owner,
+      params,
+      skip,
+      limit
+    );
+
     res.json({
       status: "success",
       code: 200,
@@ -60,10 +80,16 @@ const getById = async (req, res, next) => {
 const add = async (req, res, next) => {
   try {
     const { name, email, phone, favorite } = req.body;
+    const { _id } = req.user;
 
     const { error } = PostSchema.validate(req.body);
     if (error) {
       throw HttpError(400, error.message);
+    }
+
+    const data = await contactsActions.findContact({ email });
+    if (data) {
+      throw HttpError(409, "Email in use");
     }
 
     if (!name || !email || !phone) {
@@ -75,6 +101,7 @@ const add = async (req, res, next) => {
         email: email,
         phone: phone,
         favorite: favorite,
+        owner: _id,
       };
 
       const add = await contactsActions.addContact(contact);
@@ -95,17 +122,30 @@ const add = async (req, res, next) => {
 const remove = async (req, res, next) => {
   try {
     const id = req.params.contactId;
-    const remove = await contactsActions.removeContact(id);
-    if (remove === null) {
+
+    const contact = await contactsActions.getContactById(id);
+    const { _id } = req.user;
+
+    if (contact === null) {
       throw HttpError(404, "Not found");
+    } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
+      throw HttpError(
+        403,
+        "You do not have permission to perform this operation"
+      );
     } else {
-      res.json({
-        status: "contact deleted",
-        code: 200,
-        data: {
-          remove,
-        },
-      });
+      const remove = await contactsActions.removeContact(id);
+      if (remove === null) {
+        throw HttpError(404, "Not found");
+      } else {
+        res.json({
+          status: "contact deleted",
+          code: 200,
+          data: {
+            remove,
+          },
+        });
+      }
     }
   } catch (error) {
     next(error);
@@ -124,17 +164,29 @@ const update = async (req, res, next) => {
     if (Object.keys(req.body).length === 0) {
       throw HttpError(400, "missing required name field");
     } else {
-      const update = await contactsActions.updateContact(id, req.body);
-      if (JSON.stringify(update) === "[]") {
+      const contact = await contactsActions.getContactById(id);
+      const { _id } = req.user;
+
+      if (contact === null) {
         throw HttpError(404, "Not found");
+      } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
+        throw HttpError(
+          403,
+          "You do not have permission to perform this operation"
+        );
       } else {
-        res.json({
-          status: "success",
-          code: 200,
-          data: {
-            update,
-          },
-        });
+        const update = await contactsActions.updateContact(id, req.body);
+        if (JSON.stringify(update) === "[]") {
+          throw HttpError(404, "Not found");
+        } else {
+          res.json({
+            status: "success",
+            code: 200,
+            data: {
+              update,
+            },
+          });
+        }
       }
     }
   } catch (error) {
@@ -154,17 +206,29 @@ const updateStatus = async (req, res, next) => {
     ) {
       throw HttpError(400, "missing field favorite");
     } else {
-      const update = await contactsActions.updateContact(id, req.body);
-      if (JSON.stringify(update) === "[]") {
+      const contact = await contactsActions.getContactById(id);
+      const { _id } = req.user;
+
+      if (contact === null) {
         throw HttpError(404, "Not found");
+      } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
+        throw HttpError(
+          403,
+          "You do not have permission to perform this operation"
+        );
       } else {
-        res.json({
-          status: "success",
-          code: 200,
-          data: {
-            update,
-          },
-        });
+        const update = await contactsActions.updateContact(id, req.body);
+        if (JSON.stringify(update) === "[]") {
+          throw HttpError(404, "Not found");
+        } else {
+          res.json({
+            status: "success",
+            code: 200,
+            data: {
+              update,
+            },
+          });
+        }
       }
     }
   } catch (error) {
