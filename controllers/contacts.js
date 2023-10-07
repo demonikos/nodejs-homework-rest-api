@@ -1,7 +1,7 @@
 const { nanoid } = require("nanoid");
 const Joi = require("joi");
 
-const contactsActions = require("../utils/contactUtils");
+const contactsActions = require("../methods/contactMethods");
 const HttpError = require("../helpers/HttpError");
 
 const PostSchema = Joi.object({
@@ -60,15 +60,22 @@ const getAll = async (req, res, next) => {
 const getById = async (req, res, next) => {
   try {
     const id = req.params.contactId;
-    const getById = await contactsActions.getContactById(id);
-    if (JSON.stringify(getById) === "[]") {
+    const { _id } = req.user;
+
+    const contact = await contactsActions.getContactById(id);
+    if (contact === null) {
       throw HttpError(404, "Not found");
+    } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
+      throw HttpError(
+        403,
+        "You do not have permission to perform this operation"
+      );
     } else {
       res.json({
         status: "success",
         code: 200,
         data: {
-          getById,
+          contact,
         },
       });
     }
