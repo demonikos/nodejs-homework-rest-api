@@ -10,13 +10,13 @@ const listContacts = async (owner, params, skip, limit) => {
   return data;
 };
 
-const getContactById = async (contactId) => {
-  const data = await Contact.findOne({ _id: contactId });
+const getContactById = async (contactId, owner) => {
+  const data = await Contact.findOne({ _id: contactId, owner});
   return data;
 };
 
-const removeContact = async (contactId) => {
-  const data = await Contact.findByIdAndDelete(contactId);
+const removeContact = async (contactId, owner) => {
+  const data = await Contact.findOneAndRemove({_id: contactId, owner});
   return data;
 };
 
@@ -31,8 +31,8 @@ const addContact = async (body) => {
   return data;
 };
 
-const updateContact = async (contactId, body) => {
-  const data = await Contact.findByIdAndUpdate(contactId, body, { new: true });
+const updateContact = async (contactId, body, owner) => {
+  const data = await Contact.findOneAndUpdate({_id: contactId, owner}, body, { new: true });
   return data;
 };
 

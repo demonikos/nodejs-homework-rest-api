@@ -60,16 +60,11 @@ const getAll = async (req, res, next) => {
 const getById = async (req, res, next) => {
   try {
     const id = req.params.contactId;
-    const { _id } = req.user;
+    const { _id: owner } = req.user;
 
-    const contact = await contactsActions.getContactById(id);
+    const contact = await contactsActions.getContactById(id, owner);
     if (contact === null) {
       throw HttpError(404, "Not found");
-    } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
-      throw HttpError(
-        403,
-        "You do not have permission to perform this operation"
-      );
     } else {
       res.json({
         status: "success",
@@ -129,20 +124,10 @@ const add = async (req, res, next) => {
 const remove = async (req, res, next) => {
   try {
     const id = req.params.contactId;
+    const { _id: owner } = req.user;
 
-    const contact = await contactsActions.getContactById(id);
-    const { _id } = req.user;
-
-    if (contact === null) {
-      throw HttpError(404, "Not found");
-    } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
-      throw HttpError(
-        403,
-        "You do not have permission to perform this operation"
-      );
-    } else {
-      const remove = await contactsActions.removeContact(id);
-      if (remove === null) {
+      const remove = await contactsActions.removeContact(id, owner);
+        if (!remove) {
         throw HttpError(404, "Not found");
       } else {
         res.json({
@@ -153,7 +138,6 @@ const remove = async (req, res, next) => {
           },
         });
       }
-    }
   } catch (error) {
     next(error);
   }
@@ -162,6 +146,7 @@ const remove = async (req, res, next) => {
 const update = async (req, res, next) => {
   try {
     const id = req.params.contactId;
+    const { _id: owner } = req.user;
 
     const { error } = PutSchema.validate(req.body);
     if (error) {
@@ -171,19 +156,8 @@ const update = async (req, res, next) => {
     if (Object.keys(req.body).length === 0) {
       throw HttpError(400, "missing required name field");
     } else {
-      const contact = await contactsActions.getContactById(id);
-      const { _id } = req.user;
-
-      if (contact === null) {
-        throw HttpError(404, "Not found");
-      } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
-        throw HttpError(
-          403,
-          "You do not have permission to perform this operation"
-        );
-      } else {
-        const update = await contactsActions.updateContact(id, req.body);
-        if (JSON.stringify(update) === "[]") {
+        const update = await contactsActions.updateContact(id, req.body, owner);
+        if (!update) {
           throw HttpError(404, "Not found");
         } else {
           res.json({
@@ -194,7 +168,6 @@ const update = async (req, res, next) => {
             },
           });
         }
-      }
     }
   } catch (error) {
     next(error);
@@ -204,6 +177,7 @@ const update = async (req, res, next) => {
 const updateStatus = async (req, res, next) => {
   try {
     const id = req.params.contactId;
+    const { _id: owner } = req.user;
 
     if (Object.keys(req.body).length === 0) {
       throw HttpError(400, "missing required fields");
@@ -213,19 +187,8 @@ const updateStatus = async (req, res, next) => {
     ) {
       throw HttpError(400, "missing field favorite");
     } else {
-      const contact = await contactsActions.getContactById(id);
-      const { _id } = req.user;
-
-      if (contact === null) {
-        throw HttpError(404, "Not found");
-      } else if (JSON.stringify(contact.owner) !== JSON.stringify(_id)) {
-        throw HttpError(
-          403,
-          "You do not have permission to perform this operation"
-        );
-      } else {
-        const update = await contactsActions.updateContact(id, req.body);
-        if (JSON.stringify(update) === "[]") {
+        const update = await contactsActions.updateContact(id, req.body, owner);
+        if (!update) {
           throw HttpError(404, "Not found");
         } else {
           res.json({
@@ -236,7 +199,6 @@ const updateStatus = async (req, res, next) => {
             },
           });
         }
-      }
     }
   } catch (error) {
     next(error);
