@@ -177,7 +177,6 @@ const updateUserSubscription = async (req, res, next) => {
 const updateUserAvatar = async (req, res, next) => {
   try {
   const { _id } = req.user;
-  // console.log(`req.file -`, req.file);
   if (req.file === undefined) {
     throw HttpError(400, "bad request");
   } else {
@@ -186,16 +185,10 @@ const updateUserAvatar = async (req, res, next) => {
     .then((image) => image.resize(250, 250))
     .then((image) => image.write(tempUpload));
   const imageName = `${_id}-${originalname}`;
-  // console.log("originalname - ", originalname);
   const newImage = path.join(avatarDir, imageName);
-  console.log(`newImage - `, newImage)
   await fs.rename(tempUpload, newImage);
   const avatarURL = path.join("avatars", imageName);
-  // console.log(`avatarURL - `, avatarURL);
   await usersActions.updateUser(_id, {newImage});
-
-  // const user = await usersActions.updateUser(_id, {avatarURL});
-  // console.log(user);
 
   res.json({
     status: "success",
