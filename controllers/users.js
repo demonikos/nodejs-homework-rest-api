@@ -110,7 +110,7 @@ const loginUser = async (req, res, next) => {
           email: email,
           password: password,
           subscription: user.subscription,
-          avatarURL: user.avatarURL
+          avatarURL: user.avatarURL,
         },
       });
     }
@@ -124,7 +124,7 @@ const currentUser = async (req, res, next) => {
   res.json({
     email,
     subscription,
-    avatarURL
+    avatarURL,
   });
 };
 
@@ -176,28 +176,28 @@ const updateUserSubscription = async (req, res, next) => {
 
 const updateUserAvatar = async (req, res, next) => {
   try {
-  const { _id } = req.user;
-  if (req.file === undefined) {
-    throw HttpError(400, "bad request");
-  } else {
-  const { path: tempUpload, originalname } = req.file;
-  await Jimp.read(tempUpload)
-    .then((image) => image.resize(250, 250))
-    .then((image) => image.write(tempUpload));
-  const imageName = `${_id}-${originalname}`;
-  const newImage = path.join(avatarDir, imageName);
-  await fs.rename(tempUpload, newImage);
-  const avatarURL = path.join("avatars", imageName);
-  await usersActions.updateUser(_id, {newImage});
+    const { _id } = req.user;
+    if (req.file === undefined) {
+      throw HttpError(400, "bad request");
+    } else {
+      const { path: tempUpload, originalname } = req.file;
+      await Jimp.read(tempUpload)
+        .then((image) => image.resize(250, 250))
+        .then((image) => image.write(tempUpload));
+      const imageName = `${_id}-${originalname}`;
+      const newImage = path.join(avatarDir, imageName);
+      await fs.rename(tempUpload, newImage);
+      const avatarURL = path.join("avatars", imageName);
+      await usersActions.updateUser(_id, { newImage });
 
-  res.json({
-    status: "success",
-    code: 200,
-    data: {
-      avatarURL,
-    },
-  })
-}
+      res.json({
+        status: "success",
+        code: 200,
+        data: {
+          avatarURL,
+        },
+      });
+    }
   } catch (error) {
     next(error);
   }
