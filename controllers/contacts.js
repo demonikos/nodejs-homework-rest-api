@@ -126,18 +126,18 @@ const remove = async (req, res, next) => {
     const id = req.params.contactId;
     const { _id: owner } = req.user;
 
-      const remove = await contactsActions.removeContact(id, owner);
-        if (!remove) {
-        throw HttpError(404, "Not found");
-      } else {
-        res.json({
-          status: "contact deleted",
-          code: 200,
-          data: {
-            remove,
-          },
-        });
-      }
+    const remove = await contactsActions.removeContact(id, owner);
+    if (!remove) {
+      throw HttpError(404, "Not found");
+    } else {
+      res.json({
+        status: "contact deleted",
+        code: 200,
+        data: {
+          remove,
+        },
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -156,18 +156,18 @@ const update = async (req, res, next) => {
     if (Object.keys(req.body).length === 0) {
       throw HttpError(400, "missing required name field");
     } else {
-        const update = await contactsActions.updateContact(id, req.body, owner);
-        if (!update) {
-          throw HttpError(404, "Not found");
-        } else {
-          res.json({
-            status: "success",
-            code: 200,
-            data: {
-              update,
-            },
-          });
-        }
+      const update = await contactsActions.updateContact(id, req.body, owner);
+      if (!update) {
+        throw HttpError(404, "Not found");
+      } else {
+        res.json({
+          status: "success",
+          code: 200,
+          data: {
+            update,
+          },
+        });
+      }
     }
   } catch (error) {
     next(error);
@@ -187,18 +187,18 @@ const updateStatus = async (req, res, next) => {
     ) {
       throw HttpError(400, "missing field favorite");
     } else {
-        const update = await contactsActions.updateContact(id, req.body, owner);
-        if (!update) {
-          throw HttpError(404, "Not found");
-        } else {
-          res.json({
-            status: "success",
-            code: 200,
-            data: {
-              update,
-            },
-          });
-        }
+      const update = await contactsActions.updateContact(id, req.body, owner);
+      if (!update) {
+        throw HttpError(404, "Not found");
+      } else {
+        res.json({
+          status: "success",
+          code: 200,
+          data: {
+            update,
+          },
+        });
+      }
     }
   } catch (error) {
     next(error);

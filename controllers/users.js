@@ -2,6 +2,11 @@ const { nanoid } = require("nanoid");
 const Joi = require("joi");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const fs = require("fs/promises");
+const path = require("path");
+const gravatar = require("gravatar");
+
+const avatarDir = path.join(__dirname, "../", "public", "avatars");
 
 require("dotenv").config();
 const { SECRET_KEY } = process.env;
@@ -9,6 +14,7 @@ const { SECRET_KEY } = process.env;
 const usersActions = require("../methods/userMethods");
 const HttpError = require("../helpers/HttpError");
 const User = require("../models/user");
+const Jimp = require("jimp");
 
 const RegisterSchema = Joi.object({
   email: Joi.string().email().required().trim(),
@@ -54,11 +60,13 @@ const registerUser = async (req, res, next) => {
       throw HttpError(400, "missing required name field");
     } else {
       const hashPassword = await bcryptjs.hash(password, 10);
+      const avatarURL = gravatar.url(email);
       const user = {
         id: nanoid(),
         email: email,
         password: hashPassword,
         subscription: subscription,
+        avatarURL,
       };
 
       const reg = await usersActions.addUser(user);
@@ -102,6 +110,7 @@ const loginUser = async (req, res, next) => {
           email: email,
           password: password,
           subscription: user.subscription,
+          avatarURL: user.avatarURL
         },
       });
     }
@@ -111,10 +120,11 @@ const loginUser = async (req, res, next) => {
 };
 
 const currentUser = async (req, res, next) => {
-  const { email, subscription } = req.user;
+  const { email, subscription, avatarURL } = req.user;
   res.json({
     email,
     subscription,
+    avatarURL
   });
 };
 
@@ -164,6 +174,42 @@ const updateUserSubscription = async (req, res, next) => {
   }
 };
 
+const updateUserAvatar = async (req, res, next) => {
+  try {
+  const { _id } = req.user;
+  // console.log(`req.file -`, req.file);
+  if (req.file === undefined) {
+    throw HttpError(400, "bad request");
+  } else {
+  const { path: tempUpload, originalname } = req.file;
+  await Jimp.read(tempUpload)
+    .then((image) => image.resize(250, 250))
+    .then((image) => image.write(tempUpload));
+  const imageName = `${_id}-${originalname}`;
+  // console.log("originalname - ", originalname);
+  const newImage = path.join(avatarDir, imageName);
+  console.log(`newImage - `, newImage)
+  await fs.rename(tempUpload, newImage);
+  const avatarURL = path.join("avatars", imageName);
+  // console.log(`avatarURL - `, avatarURL);
+  await usersActions.updateUser(_id, {newImage});
+
+  // const user = await usersActions.updateUser(_id, {avatarURL});
+  // console.log(user);
+
+  res.json({
+    status: "success",
+    code: 200,
+    data: {
+      avatarURL,
+    },
+  })
+}
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   // getAllUsers,
   registerUser,
@@ -171,4 +217,5 @@ module.exports = {
   currentUser,
   logoutUser,
   updateUserSubscription,
+  updateUserAvatar,
 };
