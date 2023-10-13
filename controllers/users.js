@@ -13,6 +13,7 @@ const { SECRET_KEY } = process.env;
 
 const usersActions = require("../methods/userMethods");
 const HttpError = require("../helpers/HttpError");
+const sendEmail = require("../helpers/sendEmail");
 const User = require("../models/user");
 const Jimp = require("jimp");
 
@@ -61,15 +62,20 @@ const registerUser = async (req, res, next) => {
     } else {
       const hashPassword = await bcryptjs.hash(password, 10);
       const avatarURL = gravatar.url(email);
+      const verificationToken = nanoid();
       const user = {
         id: nanoid(),
         email: email,
         password: hashPassword,
         subscription: subscription,
         avatarURL,
+        verificationToken: verificationToken
       };
 
       const reg = await usersActions.addUser(user);
+
+      await sendEmail(email, verificationToken);
+
       res.json({
         status: "created",
         code: 201,
