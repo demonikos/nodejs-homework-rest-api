@@ -16,6 +16,8 @@ const addUser = async (body) => {
     password: body.password,
     subscription: body.subscription,
     avatarURL: body.avatarURL,
+    verify: false,
+    verificationToken: body.verificationToken
   });
   return data;
 };
