@@ -28,6 +28,10 @@ const LoginSchema = Joi.object({
   password: Joi.string().trim(),
 });
 
+const VerifySchema = Joi.object({
+  email: Joi.string().email().required().trim(),
+});
+
 // const getAllUsers = async (req, res, next) => {
 //   try {
 //     const getAll = await usersActions.listUsers();
@@ -69,7 +73,7 @@ const registerUser = async (req, res, next) => {
         password: hashPassword,
         subscription: subscription,
         avatarURL,
-        verificationToken: verificationToken
+        verificationToken: verificationToken,
       };
 
       const reg = await usersActions.addUser(user);
@@ -209,6 +213,60 @@ const updateUserAvatar = async (req, res, next) => {
   }
 };
 
+const verificationUser = async (req, res, next) => {
+  try {
+    const verificationToken = req.params.verificationToken;
+    const user = await User.findOne({ verificationToken });
+
+    if (!user) {
+      next(HttpError(404, "User not found"));
+    } else {
+      await User.findOneAndUpdate(
+        { verificationToken },
+        {
+          verificationToken: null,
+          verify: true,
+        }
+      );
+      res.json({
+        status: "success",
+        code: 200,
+        message: "Verification successull",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resendVerifyEmail = async (req, res, next) => {
+  try {
+    const { error } = VerifySchema.validate(req.body);
+    if (error) {
+      throw HttpError(400, "missing required field email");
+    }
+
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw HttpError(404, "User not found");
+    } else if (user.verify === true) {
+      throw HttpError(400, "Verification has already been passed");
+    } else {
+      const verificationToken = user.verificationToken;
+      await sendEmail(email, verificationToken);
+      res.json({
+        status: "success",
+        code: 200,
+        message: "Verification email sent",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   // getAllUsers,
   registerUser,
@@ -217,4 +275,6 @@ module.exports = {
   logoutUser,
   updateUserSubscription,
   updateUserAvatar,
+  verificationUser,
+  resendVerifyEmail,
 };

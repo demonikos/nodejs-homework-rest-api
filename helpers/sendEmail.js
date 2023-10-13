@@ -21,7 +21,7 @@ const sendEmail = async (UserEmail, verificationToken) => {
       to: UserEmail,
       from: "gorskyidmytro@meta.ua",
       subject: "Registration successfull, please verify yourself",
-      html: `To verify your account, please follow the link: <a target="_blank" href="${BASE_URL}/users/verify/${verificationToken}">Click here to verify</a>`
+      html: `To verify your account, please follow the link: <a target="_blank" href="${BASE_URL}/users/verify/${verificationToken}">Click here to verify</a>`,
     };
 
     // const email = { ...data, from: "rest-api@gmail.com" };
